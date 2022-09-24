@@ -45,8 +45,8 @@ class myJson{
             try{
                 j = json::parse(f);
                 populateMap(j_map, j);
-            }catch(std::exception &e){
-                std::cout<<"Fisierul este gol\n. Introdu date pentru a-l popula.";
+            }catch(std::exception& e){
+                std::cout<<"Fisierul este gol, introdu date pentru a-l popula.\n";
             }
         }
 

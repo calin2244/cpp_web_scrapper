@@ -7,35 +7,44 @@
 #include <fstream>
 #include <set>
 #include <nlohmann/json.hpp>
+#include "program_settings.h"
+#include <ios>
+#include <sstream>
+#include <iomanip>
 using std::map;
 
 using json = nlohmann::json;
 
-//CurlObj is used to get the html from the given webpage
-//credit to stack overflow for help on the CurlObj class
-#define jsmap std::map<std::string, int>
-
-struct comparator{
-    template<typename T>
-    bool operator()(const T& l, const T& r) const{
-        return l.second < r.second;
-    }
-};
-
-void sortM(map<std::string, int>& m){
-    std::set<std::pair<std::string ,int>, comparator> set_(m.begin(), m.end());
-
-    for(auto &x: set_){
-        std::cout<<x.first<<" "<<x.second<<'\n';
-    }
-}
 
 int main() {
-    
-    jsmap m = {
-        {"a", 2}, {"b", 4}, {"c", 1}
-    };
-    sortM(m);
+  std::string filename{"csv.txt"};
+  std::ifstream input{filename};
 
-    return 0;
+  if (!input.is_open()) {
+    std::cerr << "Couldn't read file: " << filename << "\n";
+    return 1; 
+  }
+
+  std::vector<std::vector<std::string>> csvRows;
+
+  for (std::string line; std::getline(input, line);) {
+    std::istringstream ss(std::move(line));
+    std::vector<std::string> row;
+    if (!csvRows.empty()) {
+       // We expect each row to be as big as the first row
+      row.reserve(csvRows.front().size());
+    }
+    // std::getline can split on other characters, here we use ','
+    for (std::string value; std::getline(ss, value, ',');) {
+      row.push_back(std::move(value));
+    }
+    csvRows.push_back(std::move(row));
+  }
+
+  // Print out our table
+  for(unsigned int i = +1; i < csvRows.size(); ++i){
+    for(unsigned int j = 0; j < csvRows[i].size(); ++j){
+        std::cout<<csvRows[i][0]<<" "<<'\n';
+    }
+  }
 }

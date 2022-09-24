@@ -1,6 +1,7 @@
 #include <curl/curl.h>
 #include "utils.h"
 #include "json_utlis.h"
+#include "program_settings.h"
 #include <map>
 #include <sstream>
 #include <iterator>
@@ -48,32 +49,35 @@ protected:
 };
 //credit to stack overflow for help on the CurlObj class
 
-namespace other_methods{
-
-    static inline void rtrim(std::string &s) {
-        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-            return !std::isspace(ch);
-        }).base(), s.end());
-    }
-
-    inline string getUniqueStrings(vector<string>& vec){
-        
-    }
-
-}
-
 int main() {
     
-    //get number of companies to research
-    std::cout << "Introdu stock-urile(Separate prin spatiu)\n\n";
-    std::string input, company_stock, delimiter=" ", token;
-
-    //initalizing the json
+    //File streams
     std::ifstream f("pref.json");
+    std::ifstream f_settings("program_settings.json");
+    
+    //We will be using this CSV file to extract the translation in the respective language based on the program_settings' {lang} json value
+    auto csvRows = Methods::read_csv("csv.txt");
+    vector<string> responses{};
+    map<string, int> language_index = {
+        {"RO", 0}, {"EN", 1}
+    };
+
+    //Initializing program's settings
+    Settings* program_settings = new Settings(f_settings);
+    unsigned int lang_indx = language_index[program_settings->getLang()];
+
+    for(unsigned int i = 1; i < csvRows.size(); ++i){
+        responses.push_back(csvRows[i][lang_indx]);
+    }
+    int counter = 0;
+    
+    //get number of companies to research
+    std::cout << responses[counter++] <<"\n\n";
+    std::string input, company_stock, delimiter=" ", token;
+    
+    //initalizing the json
     myJson* myJ = new myJson(f);
-
-    //myJ.showJsonContent();
-
+    
     Methods::readInput(&company_stock);
 
     //Split the content of company stock into a vector<string>
@@ -84,15 +88,13 @@ int main() {
         std::istream_iterator<std::string> begin(ss);
         std::istream_iterator<std::string> end;
         std::vector<std::string> stock_names(begin, end);
-        std::cout << "Se proceseaza datele...\n\n\n"<<company_stock.size();
+        std::cout << "Se proceseaza datele...\n\n\n";
     
     //std::vector<Data> dataObjs;
     
     //get all the data and print it out
     for (size_t i = 0; i < stock_names.size(); i++) {
         std::string name = stock_names[i];
-
-        
 
         std::string address = "https://finance.yahoo.com/quotes/" + name + "/view/v1";
         CurlObj addr(address); 
@@ -124,10 +126,11 @@ int main() {
     }
 
     std::cout<<'\n'<<"Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?\n";
-    std::cout<<"\t\t\t------------------\n\t\t\t1 - DA || 0 - NU\n\t\t\t------------------\n\n\nIntrodu raspunsul: ";
-    bool answer;
+    std::cout<<"\t\t\t------------------\n\t\t\t"<<"1 - DA || 0 - NU"<<"\n\t\t\t------------------\n\n\n";
+    std::cout<<"Introdu raspunsul: ";
+    int answer;
     cin>>answer;
-    if(answer){
+    if(answer == 1){
         unsigned int num_of_stocks;
         std::cout<<"\nIntrodu numarul de stock-uri:";
         cin>>num_of_stocks;

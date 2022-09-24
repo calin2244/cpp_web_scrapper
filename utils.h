@@ -6,6 +6,8 @@
 #include <string>
 #include <cstring>
 #include <algorithm>
+#include <sstream>
+#include <fstream>
 
 using std::vector;
 using std::string;
@@ -54,6 +56,40 @@ class Methods{
                 output->append(input);
             }
         };
+    }
+
+    static inline void rtrim(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), s.end());
+    }
+
+    static inline vector<vector<string>> read_csv(string filename){
+        std::ifstream csv_input(filename);
+        if(!csv_input.is_open()){
+            std::cerr<<"Couldn't read file: "<<filename<<'\n';
+            return vector<vector<string>>();
+        }
+
+        vector<vector<string>> csvRows;
+
+        for(string line; std::getline(csv_input, line);){
+            std::istringstream ss(std::move(line));
+            std::vector<std::string> row;
+            if(!csvRows.empty()) {
+                row.reserve(csvRows.front().size() + 100);
+            }
+
+            for(string value; std::getline(ss, value,',');){
+                row.push_back(std::move(value));
+            }
+            csvRows.push_back(std::move(row));
+        }
+        return csvRows;
+    }
+
+    inline string getUniqueStrings(vector<string>& vec){
+        return string();
     }
 };
 
