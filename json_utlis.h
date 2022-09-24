@@ -4,10 +4,38 @@
 #include "utils.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <set>
 using std::map;
 using std::string;
+using std::set;
+using std::pair;
 
 using json = nlohmann::json;
+
+
+namespace map_utils{
+    
+    struct comparator{
+        template<typename T>
+        bool operator()(const T& a, const T&b){
+            if(a.second == b.second)
+                return a.second;
+            return a.second > b.second;
+        }
+    };
+
+    void sortMap(map<string, int>& m, unsigned int num_of_items_to_show){
+        set<pair<string, int>, comparator> set_(m.begin(), m.end());
+
+        for(auto& x: set_){
+            if(num_of_items_to_show){
+                std::cout<<'\n'<<x.first<<" "<<x.second<<" \n";
+                num_of_items_to_show--;
+            }
+            else break;
+        }
+    }
+}
 
 class myJson{
     json j;
@@ -16,7 +44,7 @@ class myJson{
         myJson(std::ifstream& f){
             try{
                 j = json::parse(f);
-                populateMap(j);
+                populateMap(j_map, j);
             }catch(std::exception &e){
                 std::cout<<"Fisierul este gol\n. Introdu date pentru a-l popula.";
             }
@@ -26,9 +54,9 @@ class myJson{
             delete this;
         }
 
-        void populateMap(json j){
+        void populateMap(map<string, int>& m, json j){
             for(json::iterator it = j.begin(); it != j.end(); ++it){
-                j_map.insert({it.key(), it.value()});
+                m.insert({it.key(), it.value()});
             }
         }
         
@@ -37,6 +65,15 @@ class myJson{
                 j_map.insert({name, 1});
             }
             else j_map[name]++;
+        }
+
+        void showMostSearchedStocks(unsigned int& num_of_stocks){
+            if(j_map.size() < num_of_stocks){
+                std::cout<<"Stack overflow.";
+                return;
+            }else{
+                map_utils::sortMap(j_map, num_of_stocks);
+            }
         }
 
         void showJsonContent(){
@@ -52,12 +89,5 @@ class myJson{
         }
 
 };
-
-// std::ifstream f("pref.json");
-//     json preffered_stocks = json::parse(f);
-//     map<string, int> json_map;
-//     for(json::iterator it = preffered_stocks.begin(); it != preffered_stocks.end(); ++it){
-//         json_map.insert({it.key(), it.value()});
-//     }
 
 #endif

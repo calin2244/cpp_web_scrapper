@@ -48,10 +48,18 @@ protected:
 };
 //credit to stack overflow for help on the CurlObj class
 
-static inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
+namespace other_methods{
+
+    static inline void rtrim(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), s.end());
+    }
+
+    inline string getUniqueStrings(vector<string>& vec){
+        
+    }
+
 }
 
 int main() {
@@ -68,16 +76,19 @@ int main() {
 
     Methods::readInput(&company_stock);
 
-    // //Split the content of company stock into a vector<string>
-    std::stringstream ss(company_stock);
-    std::istream_iterator<std::string> begin(ss);
-    std::istream_iterator<std::string> end;
-    std::vector<std::string> stock_names(begin, end);
-
-    std::cout << "Se proceseaza datele...\n\n\n";
-    // //std::vector<Data> dataObjs;
+    //Split the content of company stock into a vector<string>
     
-    // ////get all the data and print it out
+
+    if(company_stock.size()){
+        std::stringstream ss(company_stock);
+        std::istream_iterator<std::string> begin(ss);
+        std::istream_iterator<std::string> end;
+        std::vector<std::string> stock_names(begin, end);
+        std::cout << "Se proceseaza datele...\n\n\n"<<company_stock.size();
+    
+    //std::vector<Data> dataObjs;
+    
+    //get all the data and print it out
     for (size_t i = 0; i < stock_names.size(); i++) {
         std::string name = stock_names[i];
 
@@ -110,6 +121,20 @@ int main() {
 
     std::ofstream g("pref.json");
     myJ->populateJsonFile(g);
+    }
+
+    std::cout<<'\n'<<"Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?\n";
+    std::cout<<"\t\t\t------------------\n\t\t\t1 - DA || 0 - NU\n\t\t\t------------------\n\n\nIntrodu raspunsul: ";
+    bool answer;
+    cin>>answer;
+    if(answer){
+        unsigned int num_of_stocks;
+        std::cout<<"\nIntrodu numarul de stock-uri:";
+        cin>>num_of_stocks;
+        std::cout<<"\n\n";
+        if(num_of_stocks != 0)
+            myJ->showMostSearchedStocks(num_of_stocks);
+    }
 
     return 0;
 }
