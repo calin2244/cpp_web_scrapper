@@ -12,6 +12,7 @@
 using std::vector;
 using std::string;
 
+
 class Methods{
     public:
         static string refactorOutput(string &s){
@@ -65,6 +66,8 @@ class Methods{
     }
 
     static inline vector<vector<string>> read_csv(string filename){
+        
+        //Thank you https://cppbyexample.com/parse_csv.html so much!!💗💗
         std::ifstream csv_input(filename);
         if(!csv_input.is_open()){
             std::cerr<<"Couldn't read file: "<<filename<<'\n';
@@ -93,7 +96,7 @@ class Methods{
     }
 };
 
-class Data{
+class Stock_Data{
     string html;
     string name;
     string price;
@@ -101,11 +104,14 @@ class Data{
     bool valid_stock = true;
     
 public:
-    Data(string name_, string html_) {
+    Stock_Data(string name_, string html_) {
         name = name_;
         Methods::toUpperCase(name);
         //all the html of the website
-        html = html_;
+        std::stringstream ss;
+        // html_.erase(html_.begin(), html_.begin() + 200000);
+        ss<<html_;
+        html = ss.str();
         populate();
     }
     
@@ -115,7 +121,7 @@ public:
         return pos >= 0 ? true : false;
     }
     
-    ~Data(){
+    ~Stock_Data(){
         delete this;
     }
 
@@ -125,14 +131,6 @@ public:
     void populate(){
         // regularMarketChange":{"
         if(this->isValid()){
-            string market_price_json = "regularMarketPrice\":{\"raw\":";
-            string change_json = "regularMarketChange\":{\"raw\":";
-            unsigned int marketPrice = html.find(market_price_json) + market_price_json.size();
-            unsigned int change_ = html.find(change_json) + change_json.size();
-            string curr_price = html.substr(marketPrice, 10);
-            string curr_change = html.substr(change_, 26);
-            
-
             /*  
                 Checks if the stock page exists and returns the actual value from the html <th> element
                 The value stored in the JSON is residual
@@ -145,11 +143,27 @@ public:
                 change = "-";
             }
             else{
+                /*
+                    Sadly, pretty inefficient.
+                    Storing a 700k characters html page into a variable and then operating on it it's not really optimal.
+                    Will be looking for api's to make requests on / Somehow make this more efficient
+                */
+                html.erase(html.begin() + 700000, html.end());
+                string market_price_json = "regularMarketPrice\":{\"raw\":";
+                string change_json = "regularMarketChange\":{\"raw\":";
+                unsigned int marketPrice = html.find(market_price_json) + market_price_json.size();
+                unsigned int change_ = html.find(change_json) + change_json.size();
+                string curr_price = html.substr(marketPrice, 10);
+                string curr_change = html.substr(change_, 26);
                 price = Methods::refactorOutput(curr_price) + " USD";
                 change = Methods::getFmtDataFromJson(curr_change);
             }
             
         }
+    }
+
+    void improved_populate(){
+        
     }
     
     /*
@@ -160,5 +174,12 @@ public:
     }
 };
 
+class Crypto_Data{
+    string name;
+    string price;
+    string html;
+    public:
+        Crypto_Data(string name_, string html_): name(name_), html(html_){}
+};
 
 #endif

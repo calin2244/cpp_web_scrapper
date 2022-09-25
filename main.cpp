@@ -49,94 +49,131 @@ protected:
 };
 //credit to stack overflow for help on the CurlObj class
 
-int main() {
-    
-    //File streams
-    std::ifstream f("pref.json");
-    std::ifstream f_settings("program_settings.json");
-    
-    //We will be using this CSV file to extract the translation in the respective language based on the program_settings' {lang} json value
-    auto csvRows = Methods::read_csv("csv.txt");
-    vector<string> responses{};
-    map<string, int> language_index = {
-        {"RO", 0}, {"EN", 1}
-    };
-
-    //Initializing program's settings
-    Settings* program_settings = new Settings(f_settings);
-    unsigned int lang_indx = language_index[program_settings->getLang()];
-
-    for(unsigned int i = 1; i < csvRows.size(); ++i){
-        responses.push_back(csvRows[i][lang_indx]);
+static void printLogo(){
+    std::ifstream logo("my_logo.txt");
+    string line{};
+    while(std::getline(logo, line)){
+        std::cout<<"\t\t"<<line<<'\n';
     }
-    int counter = 0;
-    
-    //get number of companies to research
-    std::cout << responses[counter++] <<"\n\n";
-    std::string input, company_stock, delimiter=" ", token;
-    
-    //initalizing the json
-    myJson* myJ = new myJson(f);
-    
-    Methods::readInput(&company_stock);
+    std::cout<<'\n';
+}
 
-    //Split the content of company stock into a vector<string>
-    
+int main() {
 
-    if(company_stock.size()){
-        std::stringstream ss(company_stock);
-        std::istream_iterator<std::string> begin(ss);
-        std::istream_iterator<std::string> end;
-        std::vector<std::string> stock_names(begin, end);
-        std::cout << "Se proceseaza datele...\n\n\n";
+    //Initializing Program Settings
+    std::ifstream f_settings("program_settings.json");
+    Settings* program_settings = new Settings(f_settings);
     
-    //std::vector<Data> dataObjs;
-    
-    //get all the data and print it out
-    for (size_t i = 0; i < stock_names.size(); i++) {
-        std::string name = stock_names[i];
+    printLogo();
 
-        std::string address = "https://finance.yahoo.com/quotes/" + name + "/view/v1";
-        CurlObj addr(address); 
-        try{
-            Data *data = new Data(name, addr.retrieveData());
-            bool valid = data->isValid();
-            if(valid){
-                data->show();
-                // if(json_map.find(name) == json_map.end()){
-                //     json_map.insert({name, 1});
-                // }
-                // else json_map[name]++;
-                // myJson::populateMap(pref_stocks);
-                myJ->insertInMap(name);
+    unsigned int choice;
+
+    if(program_settings->getLang() == "RO")
+        std::cout<<"Ce doresti sa cauti? 1 - Stocks || 2 - Crypto\n\nIntrodu raspunsul: ";
+    else if(program_settings->getLang() == "EN")
+        std::cout<<"What do you want to search for? 1 - Stocks || 2 - Crypto\n\nEnter your answer: ";
+
+    cin>>choice;
+    //clear the unwanted buffer
+    cin.ignore();
+    //STOCKS
+    if(choice == 1){
+        //We will be using this CSV file to extract the translation in the respective language based on the program_settings' {lang} json value
+        auto csvRows = Methods::read_csv("csv.txt");
+
+        /*
+            IN THE program_settings.json
+            lang - the language the program will run in
+            using this map we'll know what language we should use when producing output
+        */
+        map<string, int> language_index={
+            {"RO", 0}, {"EN", 1}
+        };
+        unsigned int lang_indx = language_index[program_settings->getLang()];
+        
+        vector<string> responses{};
+        for(unsigned int i = 1; i < csvRows.size(); ++i){
+            responses.push_back(csvRows[i][lang_indx]);
+        }
+    
+        //This counter will go through every line/sentence stored in the csv file accordingly to the program's lang
+        unsigned int counter = 0;
+        
+        //Introdu stock-urile(prin spatiu)
+        std::cout<<'\n'<<responses[counter++]<<"\n\n";
+        std::string input, company_stock, delimiter=" ", token;
+        
+        //initalizing the pref.json file
+        std::ifstream f("pref.json");
+        myJson* myJ = new myJson(f);
+        
+        Methods::readInput(&company_stock);
+
+        if(company_stock.size()){
+            //Split the content of company stock in words and add them into a vector<string>
+            std::stringstream ss(company_stock);
+            std::istream_iterator<std::string> begin(ss);
+            std::istream_iterator<std::string> end;
+            std::vector<std::string> stock_names(begin, end);
+
+            //Se proceseaza datele
+            std::cout << responses[counter++]<<"\n\n\n";
+            
+        //get all the data and print it
+        for (size_t i = 0; i < stock_names.size(); i++) {
+            std::string name = stock_names[i];
+
+            std::string address = "https://finance.yahoo.com/quotes/" + name + "/view/v1";
+            CurlObj addr(address); 
+            try{
+                Stock_Data *stock_data = new Stock_Data(name, addr.retrieveData());
+                bool valid = stock_data->isValid();
+
+                if(valid){
+                    stock_data->show();
+                    myJ->insertInMap(name);
+                }
+                else throw(valid);
+            }catch(bool isValid){
+                //Stock-ul nu exista
+                if(program_settings->getLang() == "RO")
+                    std::cout<<"\n\nStock-ul "<<Methods::toUpperCase(name)<<" nu exista.\n";
+                else if(program_settings->getLang() == "EN")
+                    std::cout<<"\n\nThe stock "<<Methods::toUpperCase(name)<<" doesn't exist.\n";
             }
-                
-            else throw(valid);
-        }catch(bool isValid){
-            std::cout<<"\n\nStock-ul "<<Methods::toUpperCase(name)<<" nu exista.\n";
+        }
+
+        std::ofstream g("pref.json");
+        myJ->populateJsonFile(g);
+        }
+
+        //In case you skipped looking for stocks
+        if(company_stock.size() == 0)
+            counter++;
+
+        //Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?
+        std::cout<<'\n'<<responses[counter++]<<"\n";
+                                                    //DA || NU
+        std::cout<<"\t\t\t------------------\n\t\t\t"<<responses[counter++]<<"\n\t\t\t------------------\n\n\n";
+        
+        //Introdu raspunsul: 
+        std::cout<<responses[counter++];
+        int answer;
+        cin>>answer;
+        if(answer == 1){
+            unsigned int num_of_stocks;
+            //Introdu numarul de stock-uri: 
+            std::cout<<"\n"<<responses[counter++];
+            cin>>num_of_stocks;
+            std::cout<<"\n\n";
+            if(num_of_stocks != 0)
+                myJ->showMostSearchedStocks(num_of_stocks);
         }
     }
+    //CRYPTO
+    else{
+        std::cout<<"inca nu este facut!!:(";
 
-    // for(auto &el: json_map){
-    //     preffered_stocks[el.first] = el.second;
-    // }
-
-    std::ofstream g("pref.json");
-    myJ->populateJsonFile(g);
-    }
-
-    std::cout<<'\n'<<"Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?\n";
-    std::cout<<"\t\t\t------------------\n\t\t\t"<<"1 - DA || 0 - NU"<<"\n\t\t\t------------------\n\n\n";
-    std::cout<<"Introdu raspunsul: ";
-    int answer;
-    cin>>answer;
-    if(answer == 1){
-        unsigned int num_of_stocks;
-        std::cout<<"\nIntrodu numarul de stock-uri:";
-        cin>>num_of_stocks;
-        std::cout<<"\n\n";
-        if(num_of_stocks != 0)
-            myJ->showMostSearchedStocks(num_of_stocks);
     }
 
     return 0;

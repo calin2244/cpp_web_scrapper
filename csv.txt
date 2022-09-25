@@ -1,8 +1,7 @@
 romanian, english
-Introdu stock-urile(Separate prin spatiu), Enter the stocks(Separated by space)
-Se proceseaza datele...\n\n\n, muie
-Stock-ul NAME nu exista., c
-Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?, c
-1 - DA || 0 - NU, c
-Introdu raspunsul:, c
-Introdu numarul de stock-uri:, c
+Introdu stock-urile(Separate prin spatiu),Enter the stocks(Separated by space)
+Se proceseaza datele...,Processing data...
+Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?,Do you want to find out the most searched stocks and how many times you searched for them?
+1 - DA || 0 - NU,1 - YES || 0 - NO
+Introdu raspunsul: ,Enter your answer:
+Introdu numarul de stock-uri: ,Enter the number of stocks: 

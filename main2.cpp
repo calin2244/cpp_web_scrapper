@@ -10,41 +10,50 @@
 #include "program_settings.h"
 #include <ios>
 #include <sstream>
+#include <curl/curl.h>
 #include <iomanip>
 using std::map;
 
 using json = nlohmann::json;
 
+class CurlObj {
+public:
+
+    CurlObj (std::string url) {
+        curl = curl_easy_init();
+        if (!curl) {
+            throw std::string ("Curl did not initialize.");
+        }
+
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &CurlObj::curlWriter);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlBuffer);
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+        curl_easy_perform(curl);
+    };
+    
+    static int curlWriter(char *data, int size, int nmemb, std::string *buffer) {
+        int result = 0;
+        if (buffer != NULL) {
+            buffer->append(data, size * nmemb);
+            result = size * nmemb;
+        }
+        
+        return result;
+    }
+    
+    std::string retrieveData() {
+        return curlBuffer;
+    }
+    
+protected:
+    CURL * curl;
+    std::string curlBuffer;
+};
 
 int main() {
-  std::string filename{"csv.txt"};
-  std::ifstream input{filename};
-
-  if (!input.is_open()) {
-    std::cerr << "Couldn't read file: " << filename << "\n";
-    return 1; 
-  }
-
-  std::vector<std::vector<std::string>> csvRows;
-
-  for (std::string line; std::getline(input, line);) {
-    std::istringstream ss(std::move(line));
-    std::vector<std::string> row;
-    if (!csvRows.empty()) {
-       // We expect each row to be as big as the first row
-      row.reserve(csvRows.front().size());
-    }
-    // std::getline can split on other characters, here we use ','
-    for (std::string value; std::getline(ss, value, ',');) {
-      row.push_back(std::move(value));
-    }
-    csvRows.push_back(std::move(row));
-  }
-
-  // Print out our table
-  for(unsigned int i = +1; i < csvRows.size(); ++i){
-    for(unsigned int j = 0; j < csvRows[i].size(); ++j){
-        std::cout<<csvRows[i][0]<<" "<<'\n';
-    }
-  }
+  int a;
+  std::cin>>a;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  return 0;
 }
