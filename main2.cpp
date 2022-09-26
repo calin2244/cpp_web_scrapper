@@ -7,12 +7,14 @@
 #include <fstream>
 #include <set>
 #include <nlohmann/json.hpp>
-#include "program_settings.h"
+#include "header_files/program_settings.h"
+#include "header_files/Data.h"
 #include <ios>
 #include <sstream>
 #include <curl/curl.h>
 #include <iomanip>
 using std::map;
+using std::string;
 
 using json = nlohmann::json;
 
@@ -52,8 +54,7 @@ protected:
 };
 
 int main() {
-  int a;
-  std::cin>>a;
-  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-  return 0;
+    CurlObj addr("https://finance.yahoo.com/quotes/aapl");
+    std::cout<<addr.retrieveData();
+    return 0;
 }

@@ -1,7 +1,7 @@
 #ifndef program_settings_h
 #define program_settings_h
 
-#include "utils.h"
+#include <string>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;

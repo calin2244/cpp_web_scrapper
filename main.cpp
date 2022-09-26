@@ -1,16 +1,20 @@
 #include <curl/curl.h>
-#include "utils.h"
-#include "json_utlis.h"
-#include "program_settings.h"
+#include "header_files/Data.h"
+#include "header_files/functions.h"
+#include "header_files/json_utlis.h"
+#include "header_files/program_settings.h"
 #include <map>
 #include <sstream>
 #include <iterator>
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <time.h>
+#include <iomanip>
 
 using json = nlohmann::json;
 using std::cin;
 using std::map;
+
 
 //CurlObj is used to get the html from the given webpage
 class CurlObj {
@@ -60,8 +64,10 @@ static void printLogo(){
 
 int main() {
 
+    time_t start, end;
+    
     //Initializing Program Settings
-    std::ifstream f_settings("program_settings.json");
+    std::ifstream f_settings("json_files/program_settings.json");
     Settings* program_settings = new Settings(f_settings);
     
     printLogo();
@@ -104,10 +110,14 @@ int main() {
         std::string input, company_stock, delimiter=" ", token;
         
         //initalizing the pref.json file
-        std::ifstream f("pref.json");
+        std::ifstream f("json_files/pref.json");
         myJson* myJ = new myJson(f);
         
         Methods::readInput(&company_stock);
+
+        time(&start);
+
+        // std::ios_base::sync_with_stdio(false);
 
         if(company_stock.size()){
             //Split the content of company stock in words and add them into a vector<string>
@@ -123,7 +133,7 @@ int main() {
         for (size_t i = 0; i < stock_names.size(); i++) {
             std::string name = stock_names[i];
 
-            std::string address = "https://finance.yahoo.com/quotes/" + name + "/view/v1";
+            std::string address = "https://finance.yahoo.com/quotes/" + name;
             CurlObj addr(address); 
             try{
                 Stock_Data *stock_data = new Stock_Data(name, addr.retrieveData());
@@ -143,9 +153,13 @@ int main() {
             }
         }
 
-        std::ofstream g("pref.json");
+        std::ofstream g("json_files/pref.json");
         myJ->populateJsonFile(g);
         }
+
+        time(&end);
+        double time_taken = double(end - start);
+        std::cout<<"\n\n\t\tTIMPUL EXECUTIEI: "<< std::fixed << time_taken << std::setprecision(5)<<"\n\n";
 
         //In case you skipped looking for stocks
         if(company_stock.size() == 0)

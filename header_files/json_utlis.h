@@ -1,12 +1,10 @@
 #ifndef json_utils_h
 #define json_utils_h
 
-#include "utils.h"
+#include "Data.h"
 #include <nlohmann/json.hpp>
-#include <fstream>
 #include <set>
 using std::map;
-using std::string;
 using std::set;
 using std::pair;
 
