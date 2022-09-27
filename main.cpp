@@ -15,6 +15,7 @@ using json = nlohmann::json;
 using std::cin;
 using std::map;
 
+#define YELLOW_STOCK_NAME(name) "\u001b[33m" + Methods::toUpperCase(name) + "\033[0m"
 
 //CurlObj is used to get the html from the given webpage
 class CurlObj {
@@ -62,23 +63,59 @@ static void printLogo(){
     std::cout<<'\n';
 }
 
+inline void printStockData(const vector<string>* stock_names, myJson* myJ, Settings* program_settings, size_t size){
+    for (size_t i = 0; i < size; i++) {
+        std::string name = (*stock_names)[i];
+
+        std::string address = "https://finance.yahoo.com/quotes/" + name;
+        CurlObj addr(address); 
+        try{
+            Stock_Data *stock_data = new Stock_Data(name, addr.retrieveData());
+            bool valid = stock_data->isValid();
+
+            if(valid){
+                stock_data->show();
+                myJ->insertInMap(name);
+            }
+            else throw(valid);
+        }catch(bool isValid){
+            //Stock-ul nu exista
+            if(program_settings->getLang() == "RO")
+                std::cout<<"\n\nStock-ul "<< YELLOW_STOCK_NAME(name) <<" nu exista.\n";
+            else if(program_settings->getLang() == "EN")
+                std::cout<<"\n\nThe stock "<< YELLOW_STOCK_NAME(name) <<" doesn't exist.\n";
+        }
+    }
+}
+
+std::ifstream create_file_if_not_exists(const string s, const string content){
+    std::ofstream create_file(s, std::ios::out);
+    create_file<<content;
+    create_file.close();
+    return std::ifstream(s);
+}
+
 int main() {
 
     time_t start, end;
     
-    //Initializing Program Settings
-    std::ifstream f_settings("json_files/program_settings.json");
+    //FILE STREAMS
+    std::ifstream f_settings("json_files/program_settings.json", std::ios::in);
+    if(!f_settings) f_settings = create_file_if_not_exists("program_settings.json", "{\"lang\":\"EN\", \"currency\":\"USD\"}");
+    std::ifstream f("json_files/pref.json", std::ios::in);
+    if(!f) f = create_file_if_not_exists("pref.json", "null");
+    
+
     Settings* program_settings = new Settings(f_settings);
     
     printLogo();
-
-    unsigned int choice;
 
     if(program_settings->getLang() == "RO")
         std::cout<<"Ce doresti sa cauti? 1 - Stocks || 2 - Crypto\n\nIntrodu raspunsul: ";
     else if(program_settings->getLang() == "EN")
         std::cout<<"What do you want to search for? 1 - Stocks || 2 - Crypto\n\nEnter your answer: ";
-
+    
+    unsigned int choice;
     cin>>choice;
     //clear the unwanted buffer
     cin.ignore();
@@ -110,7 +147,6 @@ int main() {
         std::string input, company_stock, delimiter=" ", token;
         
         //initalizing the pref.json file
-        std::ifstream f("json_files/pref.json");
         myJson* myJ = new myJson(f);
         
         Methods::readInput(&company_stock);
@@ -129,66 +165,48 @@ int main() {
             //Se proceseaza datele
             std::cout << responses[counter++]<<"\n\n\n";
             
-        //get all the data and print it
-        for (size_t i = 0; i < stock_names.size(); i++) {
-            std::string name = stock_names[i];
+            //get all the data and print it
+            printStockData(&stock_names, myJ, program_settings, stock_names.size());
 
-            std::string address = "https://finance.yahoo.com/quotes/" + name;
-            CurlObj addr(address); 
-            try{
-                Stock_Data *stock_data = new Stock_Data(name, addr.retrieveData());
-                bool valid = stock_data->isValid();
-
-                if(valid){
-                    stock_data->show();
-                    myJ->insertInMap(name);
-                }
-                else throw(valid);
-            }catch(bool isValid){
-                //Stock-ul nu exista
-                if(program_settings->getLang() == "RO")
-                    std::cout<<"\n\nStock-ul "<<Methods::toUpperCase(name)<<" nu exista.\n";
-                else if(program_settings->getLang() == "EN")
-                    std::cout<<"\n\nThe stock "<<Methods::toUpperCase(name)<<" doesn't exist.\n";
+            std::ofstream g("json_files/pref.json", std::ios::out | std::ios::trunc);
+            myJ->populateJsonFile(g);
             }
-        }
 
-        std::ofstream g("json_files/pref.json");
-        myJ->populateJsonFile(g);
-        }
+            time(&end);
+            double time_taken = double(end - start);
+            std::cout<<"\n\n\t\tTIMPUL EXECUTIEI: "<< std::fixed << time_taken << std::setprecision(5)<<"\n\n";
 
-        time(&end);
-        double time_taken = double(end - start);
-        std::cout<<"\n\n\t\tTIMPUL EXECUTIEI: "<< std::fixed << time_taken << std::setprecision(5)<<"\n\n";
+            //In case you skipped looking for stocks
+            if(company_stock.size() == 0)
+                counter++;
 
-        //In case you skipped looking for stocks
-        if(company_stock.size() == 0)
-            counter++;
-
-        //Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?
-        std::cout<<'\n'<<responses[counter++]<<"\n";
-                                                    //DA || NU
-        std::cout<<"\t\t\t------------------\n\t\t\t"<<responses[counter++]<<"\n\t\t\t------------------\n\n\n";
+            //Doresti sa aflii cele mai cautate stock-uri si de cate ori le-ai cautat?
+            std::cout<<'\n'<<responses[counter++]<<"\n";
+                                                        //DA || NU
+            std::cout<<"\u001b[33m\t\t\t------------------\n\t\t\t"<<responses[counter++]<<"\n\t\t\t------------------\n\n\n\033[0m";
         
-        //Introdu raspunsul: 
-        std::cout<<responses[counter++];
-        int answer;
-        cin>>answer;
-        if(answer == 1){
-            unsigned int num_of_stocks;
-            //Introdu numarul de stock-uri: 
-            std::cout<<"\n"<<responses[counter++];
-            cin>>num_of_stocks;
-            std::cout<<"\n\n";
-            if(num_of_stocks != 0)
-                myJ->showMostSearchedStocks(num_of_stocks);
+            //Introdu raspunsul: 
+            std::cout<<responses[counter++];
+            int answer;
+            cin>>answer;
+            if(answer == 1){
+                unsigned int num_of_stocks;
+                //Introdu numarul de stock-uri: 
+                std::cout<<"\n"<<responses[counter++];
+                cin>>num_of_stocks;
+                std::cout<<"\n\n";
+                if(num_of_stocks != 0)
+                    myJ->showMostSearchedStocks(num_of_stocks);
+            }
+
         }
-    }
-    //CRYPTO
-    else{
-        std::cout<<"inca nu este facut!!:(";
+        //CRYPTO
+        else{
+            std::cout<<"inca nu este facut!!:(";
 
-    }
+        }
 
+    f.close();
+    f_settings.close();
     return 0;
 }

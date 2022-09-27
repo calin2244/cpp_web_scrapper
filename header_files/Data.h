@@ -12,6 +12,9 @@
 using std::vector;
 using std::string;
 
+#define POSITIVE_CHGPC(name) "\u001b[1;32m" + Methods::toUpperCase(name) + "\033[0m"
+#define NEGATIVE_CHGPC(name) "\033[1;31m" + Methods::toUpperCase(name) + "\033[0m"
+
 class Stock_Data{
     string html;
     string name;
@@ -102,6 +105,9 @@ public:
                 }
             }
         }
+        else{
+            valid_stock = false;
+        }
         html_copy.clear();
 
         html.erase(html.begin() + 97000, html.end());
@@ -120,13 +126,13 @@ public:
             html.erase(html.begin(), html.begin() + pos + change_html.length());
             change_html = "C($positiveColor)\">";
             pos = html.find(change_html);
-            html.erase(html.begin(), html.begin() + pos + change_html.length());
+            if(pos != std::string::npos){
+                html.erase(html.begin(), html.begin() + pos + change_html.length());
             change = html.substr(0, html.find("<"));
-
+            }
             //check if the change is negative
-            auto is_numeric = [](char c) -> bool{return c >= '0' && c <= '9';};
-            //TO BE MORE EXACT: [0] - +, [1] - NUMERIC
-            if(!is_numeric(change[1])){
+            else{
+                
                 change_html = "C($negativeColor)\">";
                 pos = html.find(change_html);
                 html.erase(html.begin(), html.begin() + pos + change_html.length());
@@ -135,11 +141,12 @@ public:
 
             std::string change_percent_html = "<span class=\"C($positiveColor)\">";
             pos = html.find(change_percent_html);
-            html.erase(html.begin(), html.begin() + pos + change_percent_html.length());
-            change_percent = html.substr(0, html.find("<"));
-
+            if(pos != std::string::npos){
+                html.erase(html.begin(), html.begin() + pos + change_percent_html.length());
+                change_percent = html.substr(0, html.find("<"));
+            }
             //Change percent is negative
-            if(!is_numeric(change_percent[1])){
+            else{
                 change_percent_html = "C($negativeColor)\">";
                 pos = html.find(change_percent_html);
                 html.erase(html.begin(), html.begin() + pos + change_percent_html.length());
@@ -159,12 +166,19 @@ public:
         Prints information about each company's stock
     */
     void show(){
+        std::ios_base::sync_with_stdio(true);
+
         size_t pos = day_high.find(".");
         day_high.erase(day_high.begin() + pos + 2, day_high.end());
-        std::cout<<"\n"<<name<<":\n"<<"\tLast Price: \t\t"<<price <<'\n'<<"\tChange: \t\t"<<change<<'\n';
-        std::cout<<"\tChg%: \t\t\t"<<change_percent<<'\n';
+        printf("\n\u001b[33m%s:\n\033[0m", name.c_str());
+        std::cout<<"\tLast Price: \t\t"<<price <<'\n'<<"\tChange: \t\t"<<change<<'\n';
+        std::cout<<"\tChg%: \t\t\t"; 
+        if(change_percent[0] == '+')
+            std::cout<<POSITIVE_CHGPC(change_percent)<<'\n';
+        else std::cout<<NEGATIVE_CHGPC(change_percent)<<'\n';
+
         std::cout<<"\tLowest-Highest(Day): \t";
-        printf("\033[1;31m%s\033[0m ---- \u001b[1;32m%s\033[0m", day_low.c_str(), day_high.c_str());
+        printf("\033[1;31m%s\033[0m ---- \u001b[1;32m%s\033[0m\n", day_low.c_str(), day_high.c_str());
     }
 };
 

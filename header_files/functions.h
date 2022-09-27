@@ -89,8 +89,15 @@ class Methods{
         return csvRows;
     }
 
-    inline string getUniqueStrings(vector<string>& vec){
+    static inline string getUniqueStrings(vector<string>& vec){
         return string();
+    }
+
+    static inline string html_erase(string& html, string s){
+        size_t pos = html.find(s);
+        html.erase(html.begin(), html.begin() + pos + s.length());
+        s = html.substr(0, html.find("<"));
+        return s;
     }
 };
 

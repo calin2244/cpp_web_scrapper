@@ -54,7 +54,7 @@ protected:
 };
 
 int main() {
-    CurlObj addr("https://finance.yahoo.com/quotes/aapl");
+    CurlObj addr("https://www.coingecko.com/en/coins/bitcoin");
     std::cout<<addr.retrieveData();
     return 0;
 }
