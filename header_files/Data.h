@@ -71,6 +71,7 @@ public:
         string html_copy = html;
         string day_low_high_html = "\"regularMarketDayRange\":{\"raw\":\"";
         size_t pos = html_copy.find(day_low_high_html);
+
         if(pos != std::string::npos){
             html_copy.erase(html_copy.begin(), html_copy.begin() + pos + day_low_high_html.length());
             day_low = html_copy.substr(0, html_copy.find("\""));
@@ -85,12 +86,12 @@ public:
                     day_high = word;
                     break;
                 }
+                html_copy.clear();
             }
         }
         else{
             valid_stock = false;
         }
-        html_copy.clear();
 
         html.erase(html.begin() + 97000, html.end());
 
@@ -187,7 +188,7 @@ class Crypto_Data: public data{
         }
 
         void populate(){
-            string current_price_html = "data-coin-id=\"1\" data-coin-symbol=\"btc\" data-target=\"price.price\">";
+            string current_price_html = "data-target=\"price.price\">";
             size_t pos = html.find(current_price_html);
 
             if(pos == string::npos){
@@ -197,8 +198,20 @@ class Crypto_Data: public data{
                 html.erase(html.begin(), html.begin() + pos + current_price_html.length());
                 current_price = html.substr(0, html.find("<"));
 
+                while(current_price.length() > 12){
+                    current_price.pop_back();
+                }
+
                 findDayLow_High(&day_low, &html);
                 findDayLow_High(&day_high, &html);
+
+                while(day_low.length() > 12){
+                    day_low.pop_back();
+                }
+
+                while(day_high.length() > 12){
+                    day_high.pop_back();
+                }
 
                 string trading_volume_html = "data-no-decimal=\"false\" data-target=\"price.price\">";
                 pos = html.find(trading_volume_html);

@@ -54,7 +54,7 @@ protected:
 };
 
 int main() {
-    CurlObj addr("https://www.coingecko.com/en/coins/bitcoin");
+    CurlObj addr("https://www.coingecko.com/en/coins/shiba-inu");
     std::cout<<addr.retrieveData();
     return 0;
 }
