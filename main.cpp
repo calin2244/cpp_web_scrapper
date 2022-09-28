@@ -54,49 +54,11 @@ protected:
 };
 //credit to stack overflow for help on the CurlObj class
 
-static void printLogo(){
-    std::ifstream logo("my_logo.txt");
-    string line{};
-    while(std::getline(logo, line)){
-        std::cout<<"\t\t"<<line<<'\n';
-    }
-    std::cout<<'\n';
-}
-
-inline void printStockData(const vector<string>* stock_names, myJson* myJ, Settings* program_settings, size_t size){
-    for (size_t i = 0; i < size; i++) {
-        std::string name = (*stock_names)[i];
-
-        std::string address = "https://finance.yahoo.com/quotes/" + name;
-        CurlObj addr(address); 
-        try{
-            Stock_Data *stock_data = new Stock_Data(name, addr.retrieveData());
-            bool valid = stock_data->isValid();
-
-            if(valid){
-                stock_data->show();
-                myJ->insertInMap(name);
-            }
-            else throw(valid);
-        }catch(bool isValid){
-            //Stock-ul nu exista
-            if(program_settings->getLang() == "RO")
-                std::cout<<"\n\nStock-ul "<< YELLOW_STOCK_NAME(name) <<" nu exista.\n";
-            else if(program_settings->getLang() == "EN")
-                std::cout<<"\n\nThe stock "<< YELLOW_STOCK_NAME(name) <<" doesn't exist.\n";
-        }
-    }
-}
-
-std::ifstream create_file_if_not_exists(const string s, const string content){
-    std::ofstream create_file(s, std::ios::out);
-    create_file<<content;
-    create_file.close();
-    return std::ifstream(s);
-}
+static void printLogo();
+inline void printStockData(const vector<string>* stock_names, myJson* myJ, Settings* program_settings, size_t size);
+std::ifstream create_file_if_not_exists(const string s, const string content);
 
 int main() {
-
     time_t start, end;
     
     //FILE STREAMS
@@ -105,10 +67,9 @@ int main() {
     std::ifstream f("json_files/pref.json", std::ios::in);
     if(!f) f = create_file_if_not_exists("pref.json", "null");
     
-
     Settings* program_settings = new Settings(f_settings);
     
-    printLogo();
+    //printLogo();
 
     if(program_settings->getLang() == "RO")
         std::cout<<"Ce doresti sa cauti? 1 - Stocks || 2 - Crypto\n\nIntrodu raspunsul: ";
@@ -202,11 +163,54 @@ int main() {
         }
         //CRYPTO
         else{
-            std::cout<<"inca nu este facut!!:(";
+            CurlObj cryptoAddr("https://www.coingecko.com/en/coins/bitcoin");
+            Crypto_Data* data = new Crypto_Data("Bitcoin", cryptoAddr.retrieveData());
 
+            data->show();
         }
 
     f.close();
     f_settings.close();
     return 0;
+}
+
+static void printLogo(){
+    std::ifstream logo("my_logo.txt");
+    string line{};
+    while(std::getline(logo, line)){
+        std::cout<<"\t\t"<<line<<'\n';
+    }
+    std::cout<<'\n';
+}
+
+inline void printStockData(const vector<string>* stock_names, myJson* myJ, Settings* program_settings, size_t size){
+    for (size_t i = 0; i < size; i++) {
+        std::string name = (*stock_names)[i];
+
+        std::string address = "https://finance.yahoo.com/quotes/" + name;
+        CurlObj addr(address); 
+        try{
+            Stock_Data *stock_data = new Stock_Data(name, addr.retrieveData());
+            bool valid = stock_data->isValid();
+
+            if(valid){
+                stock_data->show();
+                myJ->insertInMap(name);
+            }
+            else throw(valid);
+        }catch(bool isValid){
+            //Stock-ul nu exista
+            if(program_settings->getLang() == "RO")
+                std::cout<<"\n\nStock-ul "<< YELLOW_STOCK_NAME(name) <<" nu exista.\n";
+            else if(program_settings->getLang() == "EN")
+                std::cout<<"\n\nThe stock "<< YELLOW_STOCK_NAME(name) <<" doesn't exist.\n";
+        }
+    }
+}
+
+std::ifstream create_file_if_not_exists(const string s, const string content){
+    std::ofstream create_file(s, std::ios::out);
+    create_file<<content;
+    create_file.close();
+    return std::ifstream(s);
 }

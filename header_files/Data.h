@@ -15,9 +15,34 @@ using std::string;
 #define POSITIVE_CHGPC(name) "\u001b[1;32m" + Methods::toUpperCase(name) + "\033[0m"
 #define NEGATIVE_CHGPC(name) "\033[1;31m" + Methods::toUpperCase(name) + "\033[0m"
 
-class Stock_Data{
-    string html;
-    string name;
+//For Crypto
+static void findDayLow_High(string* s, string* html){
+    string day_range = "}\" data-target=\"price.price\">";
+    size_t pos = (*html).find(day_range);
+    (*html).erase((*html).begin(), (*html).begin() + pos + day_range.length());
+    *s = (*html).substr(0, (*html).find("<"));
+}
+
+class data{
+    protected:
+        string name;
+        string html;
+    public:
+        data(string name_, string html_){
+            name = name_;
+            Methods::toUpperCase(name);
+            std::stringstream ss;
+            // html_.erase(html_.begin(), html_.begin() + 200000);
+            ss<<html_;
+            html = ss.str();
+        }
+
+        ~data(){
+            delete this;
+        }
+};
+
+class Stock_Data: public data{
     string price;
     string change;
     string change_percent;
@@ -25,63 +50,20 @@ class Stock_Data{
     bool valid_stock = true;
     
 public:
-    Stock_Data(string name_, string html_) {
-        name = name_;
-        Methods::Methods::toUpperCase(name);
-        //all the html of the website
-        std::stringstream ss;
-        // html_.erase(html_.begin(), html_.begin() + 200000);
-        ss<<html_;
-        html = ss.str();
-        improved_populate();
-    }
     
-    bool isValid() const{
-        // std::string html_exists = "Last Price</th>";
-        // int pos = html.find(html_exists);
-        // return pos >= 0 ? true : false;
-        return valid_stock;
+    Stock_Data(string name_, string html_) : data(name_, html_){
+        improved_populate();
     }
     
     ~Stock_Data(){
         delete this;
     }
 
-    /**
-     * @brief Picks through the html to find the needed data.
-     */
-    void populate(){
-        // regularMarketChange":{"
-        if(this->isValid()){
-            /*  
-                Checks if the stock page exists and returns the actual value from the html <th> element
-                The value stored in the JSON is residual
-            */
-            std::string lastPrice_html = "\"Last Price\">";
-            unsigned int pos = html.find(lastPrice_html) + lastPrice_html.length();
-            
-            if(html[pos] == '-'){
-                price = "-";
-                change = "-";
-            }
-            else{
-                /*
-                    Sadly, pretty inefficient.
-                    Storing a 700k characters html page into a variable and then operating on it it's not really optimal.
-                    Will be looking for api's to make requests on / Somehow make this more efficient
-                */
-                html.erase(html.begin() + 700000, html.end());
-                string market_price_json = "regularMarketPrice\":{\"raw\":";
-                string change_json = "regularMarketChange\":{\"raw\":";
-                unsigned int marketPrice = html.find(market_price_json) + market_price_json.size();
-                unsigned int change_ = html.find(change_json) + change_json.size();
-                string curr_price = html.substr(marketPrice, 10);
-                string curr_change = html.substr(change_, 26);
-                price = Methods::Methods::refactorOutput(curr_price) + " USD";
-                change = Methods::Methods::getFmtDataFromJson(curr_change);
-            }
-            
-        }
+    bool isValid() const{
+        // std::string html_exists = "Last Price</th>";
+        // int pos = html.find(html_exists);
+        // return pos >= 0 ? true : false;
+        return valid_stock;
     }
 
     void improved_populate(){
@@ -167,27 +149,72 @@ public:
     */
     void show(){
         std::ios_base::sync_with_stdio(true);
-
         size_t pos = day_high.find(".");
         day_high.erase(day_high.begin() + pos + 2, day_high.end());
-        printf("\n\u001b[33m%s:\n\033[0m", name.c_str());
-        std::cout<<"\tLast Price: \t\t"<<price <<'\n'<<"\tChange: \t\t"<<change<<'\n';
+
+        std::cout<<"\n\u001b[33m"<<name<<":\n\033[0m";
+        std::cout<<"\tLast Price: \t\t"<<price <<'\n';
+        std::cout<<"\tChange: \t\t"<<change<<'\n';
         std::cout<<"\tChg%: \t\t\t"; 
         if(change_percent[0] == '+')
             std::cout<<POSITIVE_CHGPC(change_percent)<<'\n';
         else std::cout<<NEGATIVE_CHGPC(change_percent)<<'\n';
-
-        std::cout<<"\tLowest-Highest(Day): \t";
-        printf("\033[1;31m%s\033[0m ---- \u001b[1;32m%s\033[0m\n", day_low.c_str(), day_high.c_str());
+        std::cout<<'\t'<<"Highest-Lowest(Day): \t"<<NEGATIVE_CHGPC(day_low)<<" ---- "<<POSITIVE_CHGPC(day_high)<<'\n';
     }
 };
 
-class Crypto_Data{
-    string name;
-    string price;
-    string html;
+class Crypto_Data: public data{
+    string current_price;
+    string day_low;
+    string day_high;
+    string week_low;
+    string week_high;
+    string trading_volume;
+    string market_cap_rank;
+    bool valid_crypto = true;
+
     public:
-        Crypto_Data(string name_, string html_): name(name_), html(html_){}
+        Crypto_Data(string name_, string html_): data(name_, html_){
+            populate();
+        }
+
+        ~Crypto_Data(){
+            delete this;
+        }
+
+        bool isValid() const{
+            return valid_crypto;
+        }
+
+        void populate(){
+            string current_price_html = "data-coin-id=\"1\" data-coin-symbol=\"btc\" data-target=\"price.price\">";
+            size_t pos = html.find(current_price_html);
+
+            if(pos == string::npos){
+                valid_crypto = false;
+            }
+            else{
+                html.erase(html.begin(), html.begin() + pos + current_price_html.length());
+                current_price = html.substr(0, html.find("<"));
+
+                findDayLow_High(&day_low, &html);
+                findDayLow_High(&day_high, &html);
+
+                string trading_volume_html = "data-no-decimal=\"false\" data-target=\"price.price\">";
+                pos = html.find(trading_volume_html);
+                html.erase(html.begin(), html.begin() + pos + trading_volume_html.length());
+                pos = html.find(trading_volume_html);
+                html.erase(html.begin(), html.begin() + pos + trading_volume_html.length());
+                trading_volume = html.substr(0, html.find("<"));
+            }
+        }
+        
+        void show(){
+            std::cout<<"\n\u001b[33m"<<name<<":\n\t\033[0m"<<"Current Price: \t\t\t"<<current_price<<'\n';
+            std::cout<<'\t'<<"Highest-Lowest(Day): \t\t"<<NEGATIVE_CHGPC(day_low)<<" ---- "<<POSITIVE_CHGPC(day_high)<<'\n';
+            std::cout<<'\t'<<"Trading volume: \t\t"<<trading_volume<<'\n';
+        }
+
 };
 
 #endif
