@@ -16,6 +16,9 @@ using std::cin;
 using std::map;
 
 #define YELLOW_STOCK_NAME(name) "\u001b[33m" + Methods::toUpperCase(name) + "\033[0m"
+#define STOCK_JSON "json_files/pref_stocks.json"
+#define CRYPTO_JSON "json_files/pref_crypto.json"
+#define PROGRAM_SETTINGS "json_files/program_settings.json"
 
 //CurlObj is used to get the html from the given webpage
 class CurlObj {
@@ -56,18 +59,29 @@ protected:
 
 static void printLogo();
 inline void printStockData(const vector<string>* stock_names, myJson* myJ, Settings* program_settings, size_t size);
-std::ifstream create_file_if_not_exists(const string s, const string content);
+
+void setUpFileStreams(std::ifstream& f_settings, std::ifstream& f_stocks, std::ifstream& f_crypto){
+    
+    f_settings = std::ifstream(PROGRAM_SETTINGS, std::ios::in);
+    if(!f_settings) 
+        f_settings = Methods::create_file_if_not_exists(PROGRAM_SETTINGS, "{\"lang\":\"EN\", \"currency\":\"USD\"}");
+    
+    f_stocks = std::ifstream(STOCK_JSON, std::ios::in);
+    if(!f_stocks) 
+        f_stocks = Methods::create_file_if_not_exists(STOCK_JSON, "null");
+
+    f_crypto = std::ifstream(CRYPTO_JSON, std::ios::in);
+    if(!f_crypto)
+        f_crypto = Methods::create_file_if_not_exists(CRYPTO_JSON, "null");
+
+}
 
 int main() {
     time_t start, end;
     
     //FILE STREAMS
-    std::ifstream f_settings("json_files/program_settings.json", std::ios::in);
-    if(!f_settings) 
-        f_settings = Methods::create_file_if_not_exists("program_settings.json", "{\"lang\":\"EN\", \"currency\":\"USD\"}");
-    std::ifstream f_stocks("json_files/pref.json", std::ios::in);
-    if(!f_stocks) 
-        f_stocks = Methods::create_file_if_not_exists("pref.json", "null");
+    std::ifstream f_settings, f_stocks, f_crypto;
+    setUpFileStreams(f_settings, f_stocks, f_crypto);
     
     Settings* program_settings = new Settings(f_settings);
     myJson* myJ = new myJson(f_stocks);
@@ -125,7 +139,7 @@ int main() {
             //get all the data and print it
             printStockData(&stock_names, myJ, program_settings, stock_names.size());
 
-            std::ofstream g("json_files/pref.json", std::ios::out | std::ios::trunc);
+            std::ofstream g(STOCK_JSON, std::ios::out | std::ios::trunc);
             myJ->populateJsonFile(g);
         }
 
@@ -195,7 +209,9 @@ int main() {
         }
     }
     }
+
     f_stocks.close();
+    f_crypto.close();
     f_settings.close();
     return 0;    
 }

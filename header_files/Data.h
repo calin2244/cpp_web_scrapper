@@ -32,7 +32,6 @@ class data{
             name = name_;
             Methods::toUpperCase(name);
             std::stringstream ss;
-            // html_.erase(html_.begin(), html_.begin() + 200000);
             ss<<html_;
             html = ss.str();
         }
@@ -40,6 +39,8 @@ class data{
         ~data(){
             delete this;
         }
+
+        void muie() {}
 };
 
 class Stock_Data: public data{

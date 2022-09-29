@@ -67,7 +67,7 @@ class myJson{
 
         void showMostSearchedStocks(unsigned int& num_of_stocks){
             if(j_map.size() < num_of_stocks){
-                std::cout<<"Stack overflow.";
+                std::cout<<"Stack overflow.\n";
                 return;
             }else{
                 map_utils::sortMap(j_map, num_of_stocks);
