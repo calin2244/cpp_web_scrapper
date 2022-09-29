@@ -63,11 +63,14 @@ int main() {
     
     //FILE STREAMS
     std::ifstream f_settings("json_files/program_settings.json", std::ios::in);
-    if(!f_settings) f_settings = Methods::create_file_if_not_exists("program_settings.json", "{\"lang\":\"EN\", \"currency\":\"USD\"}");
-    std::ifstream f("json_files/pref.json", std::ios::in);
-    if(!f) f = Methods::create_file_if_not_exists("pref.json", "null");
+    if(!f_settings) 
+        f_settings = Methods::create_file_if_not_exists("program_settings.json", "{\"lang\":\"EN\", \"currency\":\"USD\"}");
+    std::ifstream f_stocks("json_files/pref.json", std::ios::in);
+    if(!f_stocks) 
+        f_stocks = Methods::create_file_if_not_exists("pref.json", "null");
     
     Settings* program_settings = new Settings(f_settings);
+    myJson* myJ = new myJson(f_stocks);
 
     if(program_settings->getLang() == "RO")
         std::cout<<"Ce doresti sa cauti? 1 - Stocks || 2 - Crypto\n\nIntrodu raspunsul: ";
@@ -104,9 +107,6 @@ int main() {
         //Introdu stock-urile(prin spatiu)
         std::cout<<'\n'<<responses[counter++]<<"\n\n";
         std::string input, company_stock, delimiter=" ", token;
-        
-        //initalizing the pref.json file
-        myJson* myJ = new myJson(f);
         
         Methods::readInput(&company_stock);
 
@@ -160,6 +160,8 @@ int main() {
     //CRYPTO
     else{
         string crypto;
+
+        std::cout<<"\nIntrodu Criptomonedele: ";
         Methods::readInput(&crypto);
 
         if(crypto.size()){
@@ -168,6 +170,8 @@ int main() {
             std::istream_iterator<std::string> begin(ss);
             std::istream_iterator<std::string> end;
             std::vector<std::string> crypto_names(begin, end);
+
+            std::cout<<"Processing data... \n";
 
             for(unsigned int i = 0; i < crypto_names.size(); ++i){
                 string name = crypto_names[i];
@@ -191,7 +195,7 @@ int main() {
         }
     }
     }
-    f.close();
+    f_stocks.close();
     f_settings.close();
     return 0;    
 }
@@ -212,7 +216,7 @@ inline void printStockData(const vector<string>* stock_names, myJson* myJ, Setti
         if(searched_stock.find(name) == searched_stock.end()){
             searched_stock.insert({name, 1});
         }
-        else searched_stock[name]++;
+        else searched_stock[name]++;    
         
         //if the stock repeats, we just want to continue
         if(searched_stock[name] > 1)
