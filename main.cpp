@@ -63,9 +63,9 @@ int main() {
     
     //FILE STREAMS
     std::ifstream f_settings("json_files/program_settings.json", std::ios::in);
-    if(!f_settings) f_settings = create_file_if_not_exists("program_settings.json", "{\"lang\":\"EN\", \"currency\":\"USD\"}");
+    if(!f_settings) f_settings = Methods::create_file_if_not_exists("program_settings.json", "{\"lang\":\"EN\", \"currency\":\"USD\"}");
     std::ifstream f("json_files/pref.json", std::ios::in);
-    if(!f) f = create_file_if_not_exists("pref.json", "null");
+    if(!f) f = Methods::create_file_if_not_exists("pref.json", "null");
     
     Settings* program_settings = new Settings(f_settings);
 
@@ -193,10 +193,7 @@ int main() {
     }
     f.close();
     f_settings.close();
-    return 0;
-
-    //testing git!
-    
+    return 0;    
 }
 
 static void printLogo(){
@@ -231,11 +228,4 @@ inline void printStockData(const vector<string>* stock_names, myJson* myJ, Setti
                 std::cout<<"\n\nThe stock "<< YELLOW_STOCK_NAME(name) <<" doesn't exist.\n";
         }
     }
-}
-
-std::ifstream create_file_if_not_exists(const string s, const string content){
-    std::ofstream create_file(s, std::ios::out);
-    create_file<<content;
-    create_file.close();
-    return std::ifstream(s);
 }
