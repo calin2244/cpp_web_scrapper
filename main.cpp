@@ -115,8 +115,8 @@ int main() {
         if(company_stock.size()){
             //Split the content of company stock in words and add them into a vector<string>
             std::stringstream ss(company_stock);
-            std::istream_iterator<std::string> begin(ss);
-            std::istream_iterator<std::string> end;
+            std::istream_iterator<string> begin(ss);
+            std::istream_iterator<string> end;
             std::vector<std::string> stock_names(begin, end);
 
             //Se proceseaza datele
@@ -206,8 +206,17 @@ static void printLogo(){
 }
 
 inline void printStockData(const vector<string>* stock_names, myJson* myJ, Settings* program_settings, size_t size){
+    map<string, unsigned int> searched_stock{};
     for (unsigned int i = 0; i < size; i++) {
         std::string name = (*stock_names)[i];
+        if(searched_stock.find(name) == searched_stock.end()){
+            searched_stock.insert({name, 1});
+        }
+        else searched_stock[name]++;
+        
+        //if the stock repeats, we just want to continue
+        if(searched_stock[name] > 1)
+            continue;
 
         std::string address = "https://finance.yahoo.com/quotes/" + name;
         CurlObj addr(address); 

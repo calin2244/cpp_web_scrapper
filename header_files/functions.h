@@ -57,12 +57,6 @@ class Methods{
         };
     }
 
-    static inline void rtrim(string &s) {
-        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-            return !std::isspace(ch);
-        }).base(), s.end());
-    }
-
     static inline vector<vector<string>> read_csv(string filename){
         
         //Thank you https://cppbyexample.com/parse_csv.html so much!!💗💗
