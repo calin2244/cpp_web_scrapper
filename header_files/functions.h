@@ -99,6 +99,14 @@ class Methods{
         s = html.substr(0, html.find("<"));
         return s;
     }
+
+    static std::ifstream create_file_if_not_exists(const string s, const string content){
+        std::ofstream create_file(s, std::ios::out);
+        create_file<<content;
+        create_file.close();
+        return std::ifstream(s);
+}
+
 };
 
 #endif
