@@ -59,32 +59,20 @@ protected:
 
 static void printLogo();
 inline void printStockData(const vector<string>* stock_names, myJson* myJ, Settings* program_settings, size_t size);
-
-void setUpFileStreams(std::ifstream& f_settings, std::ifstream& f_stocks, std::ifstream& f_crypto){
-    
-    f_settings = std::ifstream(PROGRAM_SETTINGS, std::ios::in);
-    if(!f_settings) 
-        f_settings = Methods::create_file_if_not_exists(PROGRAM_SETTINGS, "{\"lang\":\"EN\", \"currency\":\"USD\"}");
-    
-    f_stocks = std::ifstream(STOCK_JSON, std::ios::in);
-    if(!f_stocks) 
-        f_stocks = Methods::create_file_if_not_exists(STOCK_JSON, "null");
-
-    f_crypto = std::ifstream(CRYPTO_JSON, std::ios::in);
-    if(!f_crypto)
-        f_crypto = Methods::create_file_if_not_exists(CRYPTO_JSON, "null");
-
-}
+void setUpFileStreams(std::ifstream& f_settings, std::ifstream& f_stocks, std::ifstream& f_crypto);
 
 int main() {
     time_t start, end;
+
+    
     
     //FILE STREAMS
     std::ifstream f_settings, f_stocks, f_crypto;
     setUpFileStreams(f_settings, f_stocks, f_crypto);
     
     Settings* program_settings = new Settings(f_settings);
-    myJson* myJ = new myJson(f_stocks);
+    myJson* myJStock = new myJson(f_stocks);
+    myJson* myJCrypto = new myJson(f_crypto);
 
     if(program_settings->getLang() == "RO")
         std::cout<<"Ce doresti sa cauti? 1 - Stocks || 2 - Crypto\n\nIntrodu raspunsul: ";
@@ -137,10 +125,11 @@ int main() {
             std::cout << responses[counter++]<<"\n\n\n";
             
             //get all the data and print it
-            printStockData(&stock_names, myJ, program_settings, stock_names.size());
+            printStockData(&stock_names, myJStock, program_settings, stock_names.size());
 
             std::ofstream g(STOCK_JSON, std::ios::out | std::ios::trunc);
-            myJ->populateJsonFile(g);
+            myJStock->populateJsonFile(g);
+            g.close();
         }
 
     time(&end);
@@ -167,7 +156,7 @@ int main() {
         cin>>num_of_stocks;
         std::cout<<"\n\n";
         if(num_of_stocks != 0)
-            myJ->showMostSearchedStocks(num_of_stocks);
+            myJStock->showMostSearchedStocks(num_of_stocks);
     }
 
     }
@@ -187,8 +176,17 @@ int main() {
 
             std::cout<<"Processing data... \n";
 
+            map<string, unsigned int> searched_crypto{};
             for(unsigned int i = 0; i < crypto_names.size(); ++i){
                 string name = crypto_names[i];
+                if(searched_crypto.find(name) == searched_crypto.end()){
+                    searched_crypto.insert({name, 1});
+                }
+                else searched_crypto[name]++;
+
+                if(searched_crypto[name] > 1)
+                    continue;
+
                 std::string address = "https://www.coingecko.com/en/coins/" + name;
                 CurlObj addr(address); 
                 try{
@@ -197,6 +195,7 @@ int main() {
 
                     if(valid){
                         crypto_data->show();
+                        myJCrypto->insertInMap(name);
                     }
                     else throw(valid);
                 }catch(bool isValid){
@@ -207,6 +206,10 @@ int main() {
                         std::cout<<"\n\nThe crypto currency "<< YELLOW_STOCK_NAME(name) <<" doesn't exist.\n";
             }
         }
+
+        std::ofstream g(CRYPTO_JSON, std::ios::out | std::ios::trunc);
+        myJCrypto->populateJsonFile(g);
+        g.close();
     }
     }
 
@@ -257,4 +260,20 @@ inline void printStockData(const vector<string>* stock_names, myJson* myJ, Setti
                 std::cout<<"\n\nThe stock "<< YELLOW_STOCK_NAME(name) <<" doesn't exist.\n";
         }
     }
+}
+
+void setUpFileStreams(std::ifstream& f_settings, std::ifstream& f_stocks, std::ifstream& f_crypto){
+    
+    f_settings = std::ifstream(PROGRAM_SETTINGS, std::ios::in);
+    if(!f_settings) 
+        f_settings = Methods::create_file_if_not_exists(PROGRAM_SETTINGS, "{\"lang\":\"EN\", \"currency\":\"USD\"}");
+    
+    f_stocks = std::ifstream(STOCK_JSON, std::ios::in);
+    if(!f_stocks) 
+        f_stocks = Methods::create_file_if_not_exists(STOCK_JSON, "null");
+
+    f_crypto = std::ifstream(CRYPTO_JSON, std::ios::in);
+    if(!f_crypto)
+        f_crypto = Methods::create_file_if_not_exists(CRYPTO_JSON, "null");
+
 }
