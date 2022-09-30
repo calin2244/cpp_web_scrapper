@@ -13,6 +13,10 @@
 #include <sstream>
 #include <curl/curl.h>
 #include <iomanip>
+#include <thread>
+#include  <chrono>
+#include <stdlib.h>
+
 using std::map;
 using std::string;
 
@@ -54,7 +58,18 @@ protected:
 };
 
 int main() {
-    CurlObj addr("https://www.coingecko.com/en/coins/shiba-inu");
-    std::cout<<addr.retrieveData();
+    
+    while(true){
+        CurlObj addr("https://www.coingecko.com/en/coins/bitcoin");
+        try{
+            Crypto_Data *crp = new Crypto_Data("BITCOIN", addr.retrieveData());
+            crp->show();
+            std::this_thread::sleep_for(std::chrono::seconds(6));
+            std::system("clear");
+        }catch(std::exception& e){
+            std::cout<<"BAD URL";
+        }
+    }
+
     return 0;
 }

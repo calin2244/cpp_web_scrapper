@@ -138,7 +138,14 @@ public:
             }
         }
         else{
-            valid_stock = false;
+            string price_html = "data-field=\"regularMarketPrice\" data-trend=\"none\" data-pricehint=\"4\" value=\"";
+            pos = html.find(price_html);
+            if(pos == string::npos)
+                valid_stock = false;
+            else{
+                html.erase(html.begin(), html.begin() + pos + price_html.length());
+                price = html.substr(0, html.find("\"")) + " USD";
+            }            
         }
     }
     
@@ -152,7 +159,7 @@ public:
     void show(){
         std::ios_base::sync_with_stdio(true);
         size_t pos = day_high.find(".");
-        day_high.erase(day_high.begin() + pos + 2, day_high.end());
+        day_high.erase(day_high.begin() + pos + 6, day_high.end());
 
         std::cout<<"\n\u001b[33m"<<name<<":\n\033[0m";
         std::cout<<"\tLast Price: \t\t"<<price <<'\n';
