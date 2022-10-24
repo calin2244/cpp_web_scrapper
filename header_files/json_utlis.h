@@ -48,9 +48,7 @@ class myJson{
             }
         }
 
-        ~myJson(){
-            delete this;
-        }
+        ~myJson(){}
 
         void populateMap(map<string, int>& m, json j){
             for(json::iterator it = j.begin(); it != j.end(); ++it){

@@ -12,11 +12,13 @@ class Settings{
     std::string currency;
 
     public:
-        Settings(std::ifstream& f): j(json::parse(f)), pref_lang(j["lang"]), currency(j["currency"]){}
-
-        ~Settings(){
-            delete this;
+        Settings(std::ifstream& f){
+            j = json::parse(f);
+            pref_lang = j["lang"];
+            currency = j["currency"];
         }
+
+        ~Settings(){}
 
         std::string getLang() const{
             return pref_lang;

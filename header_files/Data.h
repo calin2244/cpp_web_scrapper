@@ -56,14 +56,9 @@ public:
         improved_populate();
     }
     
-    ~Stock_Data(){
-        delete this;
-    }
+    ~Stock_Data(){}
 
     bool isValid() const{
-        // std::string html_exists = "Last Price</th>";
-        // int pos = html.find(html_exists);
-        // return pos >= 0 ? true : false;
         return valid_stock;
     }
 
