@@ -213,6 +213,10 @@ int main() {
     }
     }
 
+    delete myJCrypto;
+    delete myJStock;
+    delete program_settings;
+
     f_stocks.close();
     f_crypto.close();
     f_settings.close();
