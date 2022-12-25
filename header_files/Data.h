@@ -36,11 +36,7 @@ class data{
             html = ss.str();
         }
 
-        ~data(){
-            delete this;
-        }
-
-        void muie() {}
+        ~data(){        }
 };
 
 class Stock_Data: public data{
